@@ -9,6 +9,7 @@ import {
   Badge,
   Icon,
   Skeleton,
+  useBreakpointValue,
 } from '@chakra-ui/react'
 import { Shield, TrendingUp, AlertTriangle, CheckCircle, XCircle, Eye } from 'lucide-react'
 
@@ -47,12 +48,13 @@ const StatCard = ({ icon, label, value, color = 'blue', isLoading }) => (
 const Sidebar = ({ statistics, isLoading }) => {
   const bgColor = useColorModeValue('white', 'cyber.darker')
   const borderColor = useColorModeValue('gray.200', 'cyber.blue')
+  const sidebarWidth = useBreakpointValue({ lg: '280px', xl: '320px' })
 
   const getDecisionStats = () => {
     const decisions = statistics.decisions || {}
     return [
-      { key: 'allowed', label: 'Allowed', icon: CheckCircle, color: 'green' },
-      { key: 'blocked', label: 'Blocked', icon: XCircle, color: 'red' },
+      { key: 'allow', label: 'Allowed', icon: CheckCircle, color: 'green' },
+      { key: 'block', label: 'Blocked', icon: XCircle, color: 'red' },
       { key: 'monitor', label: 'Monitor', icon: Eye, color: 'yellow' },
     ].map(item => ({
       ...item,
@@ -79,13 +81,15 @@ const Sidebar = ({ statistics, isLoading }) => {
 
   return (
     <Box
-      w="320px"
+      w={sidebarWidth}
       bg={bgColor}
       borderRight="1px"
       borderColor={borderColor}
       p={6}
-      h="100vh"
+      h="calc(100vh - 80px)"
       overflowY="auto"
+      position="sticky"
+      top="80px"
     >
       <VStack spacing={6} align="stretch">
         <Box>

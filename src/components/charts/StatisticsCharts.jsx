@@ -7,6 +7,7 @@ import {
   VStack,
   HStack,
   Icon,
+  Heading,
 } from '@chakra-ui/react'
 import {
   PieChart,
@@ -20,8 +21,12 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  LineChart,
+  Line,
+  Area,
+  AreaChart,
 } from 'recharts'
-import { TrendingUp, Shield, Activity, Target } from 'lucide-react'
+import { TrendingUp, Shield, Activity, Target, BarChart3 } from 'lucide-react'
 
 const StatisticsCharts = ({ statistics, isLoading }) => {
   const bgColor = useColorModeValue('white', 'cyber.darker')
@@ -53,6 +58,7 @@ const StatisticsCharts = ({ statistics, isLoading }) => {
     return Object.entries(confidence).map(([key, value]) => ({
       name: key.charAt(0).toUpperCase() + key.slice(1),
       value: value,
+      color: key === 'high' ? '#4caf50' : key === 'medium' ? '#ffc107' : '#f44336'
     }))
   }, [statistics.confidence])
 
@@ -64,10 +70,11 @@ const StatisticsCharts = ({ statistics, isLoading }) => {
       .map(([key, value]) => ({
         name: key,
         value: value,
+        color: key.startsWith('2') ? '#4caf50' : key.startsWith('3') ? '#ffc107' : '#f44336'
       }))
   }, [statistics.statusCodes])
 
-  const ChartContainer = ({ title, icon, children }) => (
+  const ChartContainer = ({ title, icon, children, colSpan = 1 }) => (
     <Box
       bg={bgColor}
       borderWidth="1px"
@@ -80,9 +87,10 @@ const StatisticsCharts = ({ statistics, isLoading }) => {
         boxShadow: 'md',
         transform: 'translateY(-2px)',
       }}
+      gridColumn={colSpan > 1 ? `span ${colSpan}` : 'auto'}
     >
-      <HStack mb={4}>
-        <Icon as={icon} boxSize={5} color="cyber.blue" />
+      <HStack mb={6}>
+        <Icon as={icon} boxSize={6} color="cyber.blue" />
         <Text fontSize="lg" fontWeight="bold" color={textColor}>
           {title}
         </Text>
@@ -93,78 +101,106 @@ const StatisticsCharts = ({ statistics, isLoading }) => {
 
   if (isLoading) {
     return (
-      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-        {[1, 2, 3, 4].map((i) => (
-          <ChartContainer key={i} title="Loading..." icon={TrendingUp}>
-            <Box h="300px" display="flex" alignItems="center" justifyContent="center">
-              <Text color="gray.500">Loading chart data...</Text>
-            </Box>
-          </ChartContainer>
-        ))}
-      </SimpleGrid>
+      <Box mt={8}>
+        <VStack spacing={6} align="stretch">
+          <HStack mb={6}>
+            <Icon as={BarChart3} boxSize={8} color="cyber.blue" />
+            <Heading size="lg" color={textColor}>
+              Analytics Dashboard
+            </Heading>
+          </HStack>
+          
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+            {[1, 2, 3, 4].map((i) => (
+              <ChartContainer key={i} title="Loading..." icon={TrendingUp}>
+                <Box h="300px" display="flex" alignItems="center" justifyContent="center">
+                  <Text color="gray.500">Loading chart data...</Text>
+                </Box>
+              </ChartContainer>
+            ))}
+          </SimpleGrid>
+        </VStack>
+      </Box>
     )
   }
 
   return (
-    <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-      <ChartContainer title="Security Decisions" icon={Shield}>
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
-            <Pie
-              data={decisionData}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-              outerRadius={80}
-              fill="#8884d8"
-              dataKey="value"
-            >
-              {decisionData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
-      </ChartContainer>
+    <Box mt={8}>
+      <VStack spacing={6} align="stretch">
+        <HStack mb={6}>
+          <Icon as={BarChart3} boxSize={8} color="cyber.blue" />
+          <Heading size="lg" color={textColor}>
+            Analytics Dashboard
+          </Heading>
+        </HStack>
+        
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 2 }} spacing={6}>
+          <ChartContainer title="Security Decisions Distribution" icon={Shield}>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={decisionData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {decisionData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartContainer>
 
-      <ChartContainer title="HTTP Methods" icon={Activity}>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={methodData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="value" fill="#00d4ff" />
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartContainer>
+          <ChartContainer title="Confidence Levels" icon={Target}>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={confidenceData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="value" fill="#00d4ff" />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartContainer>
 
-      <ChartContainer title="Confidence Levels" icon={Target}>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={confidenceData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="value" fill="#39ff14" />
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartContainer>
+          <ChartContainer title="HTTP Methods Usage" icon={Activity}>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={methodData} layout="horizontal">
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" />
+                <YAxis dataKey="name" type="category" width={60} />
+                <Tooltip />
+                <Bar dataKey="value" fill="#39ff14" />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartContainer>
 
-      <ChartContainer title="Status Codes" icon={TrendingUp}>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={statusData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="value" fill="#ff7b00" />
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartContainer>
-    </SimpleGrid>
+          <ChartContainer title="HTTP Status Codes" icon={TrendingUp}>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={statusData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Area 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke="#ff7b00" 
+                  fill="#ff7b00" 
+                  fillOpacity={0.6}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        </SimpleGrid>
+      </VStack>
+    </Box>
   )
 }
 

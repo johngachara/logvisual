@@ -14,13 +14,18 @@ import {
   useColorModeValue,
   HStack,
   Icon,
+  useBreakpointValue,
 } from '@chakra-ui/react'
 import { ExternalLink, Shield, Clock, Globe, User, Activity } from 'lucide-react'
 import { formatTimestamp, formatRelativeTime, getDecisionColor, getConfidenceColor, getStatusColor, truncateText } from '../../utils/helpers'
 
-const LogTable = memo(({ logs, isLoading }) => {
+const LogTable = memo(({ logs, isLoading, onLogClick }) => {
   const bgColor = useColorModeValue('white', 'cyber.darker')
   const borderColor = useColorModeValue('gray.200', 'cyber.blue')
+  const hoverBg = useColorModeValue('gray.50', 'rgba(0, 212, 255, 0.05)')
+  
+  const isMobile = useBreakpointValue({ base: true, md: false })
+  const isTablet = useBreakpointValue({ base: false, md: true, lg: false })
 
   if (isLoading) {
     return (
@@ -33,7 +38,7 @@ const LogTable = memo(({ logs, isLoading }) => {
   if (!logs || logs.length === 0) {
     return (
       <Box p={8} textAlign="center">
-        <Text color="gray.500">No logs found matching your criteria.</Text>
+        <Text color="gray.500">No logs found.</Text>
       </Box>
     )
   }
@@ -44,26 +49,31 @@ const LogTable = memo(({ logs, isLoading }) => {
       borderWidth="1px"
       borderColor={borderColor}
       borderRadius="lg"
-      overflow="hidden"
+      overflow="auto"
       boxShadow="sm"
     >
-      <Table variant="cyber" size="sm">
+      <Table variant="cyber" size={isMobile ? "sm" : "md"}>
         <Thead>
           <Tr>
-            <Th>Timestamp</Th>
+            <Th>Time</Th>
             <Th>IP Address</Th>
-            <Th>Method</Th>
+            {!isMobile && <Th>Method</Th>}
             <Th>URL</Th>
-            <Th>Status</Th>
+            {!isMobile && <Th>Status</Th>}
             <Th>Decision</Th>
-            <Th>Confidence</Th>
-            <Th>User Agent</Th>
-            <Th>Reasoning</Th>
+            {!isTablet && !isMobile && <Th>Confidence</Th>}
+            {!isTablet && !isMobile && <Th>User Agent</Th>}
           </Tr>
         </Thead>
         <Tbody>
           {logs.map((log) => (
-            <Tr key={log.id}>
+            <Tr 
+              key={log.id}
+              cursor="pointer"
+              _hover={{ bg: hoverBg }}
+              onClick={() => onLogClick(log)}
+              transition="background-color 0.2s"
+            >
               <Td>
                 <VStack align="start" spacing={1}>
                   <HStack>
@@ -72,9 +82,11 @@ const LogTable = memo(({ logs, isLoading }) => {
                       {formatTimestamp(log.timestamp)}
                     </Text>
                   </HStack>
-                  <Text fontSize="xs" color="gray.500">
-                    {formatRelativeTime(log.timestamp)}
-                  </Text>
+                  {!isMobile && (
+                    <Text fontSize="xs" color="gray.500">
+                      {formatRelativeTime(log.timestamp)}
+                    </Text>
+                  )}
                 </VStack>
               </Td>
               
@@ -87,68 +99,69 @@ const LogTable = memo(({ logs, isLoading }) => {
                 </HStack>
               </Td>
               
-              <Td>
-                <HStack>
-                  <Icon as={Activity} boxSize={3} color="gray.500" />
-                  <Badge
-                    colorScheme={log.method === 'GET' ? 'green' : log.method === 'POST' ? 'blue' : 'orange'}
-                    variant="subtle"
-                  >
-                    {log.method}
-                  </Badge>
-                </HStack>
-              </Td>
+              {!isMobile && (
+                <Td>
+                  <HStack>
+                    <Icon as={Activity} boxSize={3} color="gray.500" />
+                    <Badge
+                      colorScheme={log.method === 'GET' ? 'green' : log.method === 'POST' ? 'blue' : 'orange'}
+                      variant="subtle"
+                      size="sm"
+                    >
+                      {log.method}
+                    </Badge>
+                  </HStack>
+                </Td>
+              )}
               
               <Td>
                 <Tooltip label={log.url} hasArrow>
                   <HStack>
                     <Icon as={ExternalLink} boxSize={3} color="gray.500" />
                     <Text fontSize="sm" fontFamily="mono">
-                      {truncateText(log.url, 40)}
+                      {truncateText(log.url, isMobile ? 20 : 40)}
                     </Text>
                   </HStack>
                 </Tooltip>
               </Td>
               
-              <Td>
-                <Badge colorScheme={getStatusColor(log.status)} variant="solid">
-                  {log.status}
-                </Badge>
-              </Td>
+              {!isMobile && (
+                <Td>
+                  <Badge colorScheme={getStatusColor(log.status)} variant="solid" size="sm">
+                    {log.status}
+                  </Badge>
+                </Td>
+              )}
               
               <Td>
                 <HStack>
                   <Icon as={Shield} boxSize={3} color="gray.500" />
-                  <Badge colorScheme={getDecisionColor(log.decision)} variant="solid">
+                  <Badge colorScheme={getDecisionColor(log.decision)} variant="solid" size="sm">
                     {log.decision}
                   </Badge>
                 </HStack>
               </Td>
               
-              <Td>
-                <Badge colorScheme={getConfidenceColor(log.confidence)} variant="outline">
-                  {log.confidence}
-                </Badge>
-              </Td>
+              {!isTablet && !isMobile && (
+                <Td>
+                  <Badge colorScheme={getConfidenceColor(log.confidence)} variant="outline" size="sm">
+                    {log.confidence}
+                  </Badge>
+                </Td>
+              )}
               
-              <Td>
-                <Tooltip label={log.user_agent} hasArrow>
-                  <HStack>
-                    <Icon as={User} boxSize={3} color="gray.500" />
-                    <Text fontSize="sm">
-                      {truncateText(log.user_agent, 30)}
-                    </Text>
-                  </HStack>
-                </Tooltip>
-              </Td>
-              
-              <Td>
-                <Tooltip label={log.reasoning} hasArrow>
-                  <Text fontSize="sm" color="gray.600">
-                    {truncateText(log.reasoning, 50)}
-                  </Text>
-                </Tooltip>
-              </Td>
+              {!isTablet && !isMobile && (
+                <Td>
+                  <Tooltip label={log.user_agent} hasArrow>
+                    <HStack>
+                      <Icon as={User} boxSize={3} color="gray.500" />
+                      <Text fontSize="sm">
+                        {truncateText(log.user_agent, 30)}
+                      </Text>
+                    </HStack>
+                  </Tooltip>
+                </Td>
+              )}
             </Tr>
           ))}
         </Tbody>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { logService } from '../services/supabase'
 
-export const useLogData = (initialFilters = {}) => {
+export const useLogData = () => {
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -9,14 +9,13 @@ export const useLogData = (initialFilters = {}) => {
   const [totalPages, setTotalPages] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(50)
-  const [filters, setFilters] = useState(initialFilters)
 
-  const fetchLogs = useCallback(async (page = currentPage, size = pageSize, currentFilters = filters) => {
+  const fetchLogs = useCallback(async (page = currentPage, size = pageSize) => {
     setLoading(true)
     setError(null)
     
     try {
-      const result = await logService.getLogs(currentFilters, page, size)
+      const result = await logService.getLogs({}, page, size)
       setLogs(result.data)
       setTotalCount(result.count)
       setTotalPages(result.totalPages)
@@ -26,12 +25,7 @@ export const useLogData = (initialFilters = {}) => {
     } finally {
       setLoading(false)
     }
-  }, [currentPage, pageSize, filters])
-
-  const updateFilters = useCallback((newFilters) => {
-    setFilters(newFilters)
-    setCurrentPage(1) // Reset to first page when filters change
-  }, [])
+  }, [currentPage, pageSize])
 
   const changePage = useCallback((page) => {
     setCurrentPage(page)
@@ -43,8 +37,8 @@ export const useLogData = (initialFilters = {}) => {
   }, [])
 
   const refreshLogs = useCallback(() => {
-    fetchLogs(currentPage, pageSize, filters)
-  }, [fetchLogs, currentPage, pageSize, filters])
+    fetchLogs(currentPage, pageSize)
+  }, [fetchLogs, currentPage, pageSize])
 
   useEffect(() => {
     fetchLogs()
@@ -58,8 +52,6 @@ export const useLogData = (initialFilters = {}) => {
     totalPages,
     currentPage,
     pageSize,
-    filters,
-    updateFilters,
     changePage,
     changePageSize,
     refreshLogs,

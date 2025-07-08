@@ -7,6 +7,8 @@ import {
   Box,
   IconButton,
   useColorModeValue,
+  VStack,
+  useBreakpointValue,
 } from '@chakra-ui/react'
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react'
 
@@ -20,9 +22,10 @@ const Pagination = ({
 }) => {
   const bgColor = useColorModeValue('white', 'cyber.darker')
   const borderColor = useColorModeValue('gray.200', 'cyber.blue')
+  const isMobile = useBreakpointValue({ base: true, md: false })
 
   const getPageNumbers = () => {
-    const delta = 2
+    const delta = isMobile ? 1 : 2
     const range = []
     const rangeWithDots = []
 
@@ -49,6 +52,63 @@ const Pagination = ({
 
   const startItem = (currentPage - 1) * pageSize + 1
   const endItem = Math.min(currentPage * pageSize, totalCount)
+
+  if (isMobile) {
+    return (
+      <Box
+        bg={bgColor}
+        borderWidth="1px"
+        borderColor={borderColor}
+        borderRadius="lg"
+        p={4}
+        mt={6}
+      >
+        <VStack spacing={4}>
+          <Text fontSize="sm" color="gray.500" textAlign="center">
+            Showing {startItem} to {endItem} of {totalCount} results
+          </Text>
+          
+          <HStack spacing={2} justify="center">
+            <IconButton
+              icon={<ChevronLeft size={16} />}
+              size="sm"
+              onClick={() => onPageChange(currentPage - 1)}
+              isDisabled={currentPage === 1}
+              aria-label="Previous page"
+            />
+            
+            <Text fontSize="sm" px={4}>
+              Page {currentPage} of {totalPages}
+            </Text>
+
+            <IconButton
+              icon={<ChevronRight size={16} />}
+              size="sm"
+              onClick={() => onPageChange(currentPage + 1)}
+              isDisabled={currentPage === totalPages}
+              aria-label="Next page"
+            />
+          </HStack>
+
+          <HStack>
+            <Text fontSize="sm" color="gray.500">
+              Rows:
+            </Text>
+            <Select
+              size="sm"
+              value={pageSize}
+              onChange={(e) => onPageSizeChange(Number(e.target.value))}
+              w="80px"
+            >
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </Select>
+          </HStack>
+        </VStack>
+      </Box>
+    )
+  }
 
   return (
     <Box
